@@ -8,6 +8,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using IBM.EntityFrameworkCore;
+using IBM.EntityFrameworkCore.Storage.Internal;
+using Gmaster.Models;
 
 namespace Gmaster
 {
@@ -32,6 +35,11 @@ namespace Gmaster
 
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+
+            services.AddDbContext<GmasterDbContext>(options
+                => options.UseDb2(
+                    Configuration.GetConnectionString("MupyContext"),
+                    p => p.SetServerInfo(IBMDBServerType.LUW, IBMDBServerVersion.LUW_11_01_2020)));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
