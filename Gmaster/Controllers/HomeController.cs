@@ -9,43 +9,18 @@ using Microsoft.Extensions.Configuration;
 
 namespace Gmaster.Controllers
 {
-    public abstract class ConfigController : Controller
-    {
-        public ConfigController(IConfiguration configuration)
-        {
-            Configuration = configuration;
-        }
-
-        public IConfiguration Configuration { get; }
-    }
-
-    public abstract class DbContextController : ConfigController
-    {
-        private GmasterDbContext _dbContext;
-
-        public DbContextController(IConfiguration configuration, GmasterDbContext dbContext) : base(configuration)
-        {
-            DbContext = dbContext;
-        }
-
-        protected DbContextController(GmasterDbContext dbContext) : this(null, dbContext)
-        {
-            DbContext = dbContext;
-        }
-
-        public GmasterDbContext DbContext { get => _dbContext; set => _dbContext = value; }
-
-    }
     
-    public class HomeController : DbContextController
+    public class HomeController : Controller
     {
-        public HomeController(IConfiguration configuration, GmasterDbContext dbContext) : base(configuration, dbContext)
+        private GmasterDbContext _context;
+        public HomeController(GmasterDbContext context)
         {
+            this._context = context;
         }
 
         public IActionResult Index()
         {
-            var tables = (from tbl in DbContext.Talbes
+            var tables = (from tbl in _context.Talbes
                           select tbl).First();
 
             Debug.WriteLine(tables.tabname);
