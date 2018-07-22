@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Gmaster.Models;
+using System.Data;
 
 namespace Gmaster.Controllers
 {
@@ -20,120 +21,173 @@ namespace Gmaster.Controllers
             _context = context;
         }
 
-        // GET: api/Tables
-        [HttpGet]
-        public IEnumerable<Tables> GetTalbes()
+        [HttpGet("{schema}", Name = "Schema")]
+        public object GetTablesBySchema(string schema)
         {
-            return _context.Talbes;
+
+            var tables = from tbl in _context.Talbes
+                         where tbl.tabschema == schema
+                         &&   (tbl.type == "T" || tbl.type == "V")
+                         orderby tbl.tabname
+                         select new {
+                            tabschema=tbl.tabschema,
+                            tabname=tbl.tabname,
+                            remarks=tbl.remarks,
+                            tablename=tbl.remarks ?? tbl.tabname,
+                            type=tbl.type
+                         };
+            return tables.ToList();
         }
 
-        // GET: api/Tables/5
-        [HttpGet("{id}")]
-        public async Task<IActionResult> GetTables([FromRoute] string id)
+        [HttpGet("{schema}/{tablename}", Name = "TableName")]
+        public List<Dictionary<string, object>> GetRecords(string schema, string tablename)
         {
-            if (!ModelState.IsValid)
+            var result = new List<Dictionary<string, object>>();
+
+            var cols = from col in _context.Columns
+                            where col.tabschema == schema
+                            && col.tabname == tablename
+                            orderby col.colno
+                            select col;
+
+            var conn = _context.Database.GetDbConnection();
+            if (conn.State != ConnectionState.Open)
             {
-                return BadRequest(ModelState);
+                conn.Open();
             }
-
-            var tables = await _context.Talbes.FindAsync(id);
-
-            if (tables == null)
+            var command = conn.CreateCommand();
+            int limit = 100;    // TODO
+            int offset = 0;     // TODO
+            command.CommandText = $"select * from {schema}.{tablename} limit {limit} offset {offset}";
+            using (var reader = command.ExecuteReader())
             {
-                return NotFound();
-            }
-
-            return Ok(tables);
-        }
-
-        // PUT: api/Tables/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutTables([FromRoute] string id, [FromBody] Tables tables)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            if (id != tables.tabschema)
-            {
-                return BadRequest();
-            }
-
-            _context.Entry(tables).State = EntityState.Modified;
-
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!TablesExists(id))
+                while (reader.Read())
                 {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
+                    var rec = new Dictionary<string, object>();
+                    result.Add(rec);
+                    foreach (var col in cols)
+                    {
+                        object value = reader[col.colno];
+                        rec[col.colname] = value;
+                    }
                 }
             }
-
-            return NoContent();
+            return result;
         }
 
-        // POST: api/Tables
-        [HttpPost]
-        public async Task<IActionResult> PostTables([FromBody] Tables tables)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+        //// GET: api/Tables
+        //[HttpGet]
+        //public IEnumerable<Tables> GetTalbes()
+        //{
+        //    return _context.Talbes;
+        //}
+        //// GET: api/Tables/5
+        //[HttpGet("{id}")]
+        //public async Task<IActionResult> GetTables([FromRoute] string id)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
 
-            _context.Talbes.Add(tables);
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                if (TablesExists(tables.tabschema))
-                {
-                    return new StatusCodeResult(StatusCodes.Status409Conflict);
-                }
-                else
-                {
-                    throw;
-                }
-            }
+        //    var tables = await _context.Talbes.FindAsync(id);
 
-            return CreatedAtAction("GetTables", new { id = tables.tabschema }, tables);
-        }
+        //    if (tables == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-        // DELETE: api/Tables/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTables([FromRoute] string id)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
+        //    return Ok(tables);
+        //}
 
-            var tables = await _context.Talbes.FindAsync(id);
-            if (tables == null)
-            {
-                return NotFound();
-            }
+        //// PUT: api/Tables/5
+        //[HttpPut("{id}")]
+        //public async Task<IActionResult> PutTables([FromRoute] string id, [FromBody] Tables tables)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
 
-            _context.Talbes.Remove(tables);
-            await _context.SaveChangesAsync();
+        //    if (id != tables.tabschema)
+        //    {
+        //        return BadRequest();
+        //    }
 
-            return Ok(tables);
-        }
+        //    _context.Entry(tables).State = EntityState.Modified;
 
-        private bool TablesExists(string id)
-        {
-            return _context.Talbes.Any(e => e.tabschema == id);
-        }
+        //    try
+        //    {
+        //        await _context.SaveChangesAsync();
+        //    }
+        //    catch (DbUpdateConcurrencyException)
+        //    {
+        //        if (!TablesExists(id))
+        //        {
+        //            return NotFound();
+        //        }
+        //        else
+        //        {
+        //            throw;
+        //        }
+        //    }
+
+        //    return NoContent();
+        //}
+
+        //// POST: api/Tables
+        //[HttpPost]
+        //public async Task<IActionResult> PostTables([FromBody] Tables tables)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
+
+        //    _context.Talbes.Add(tables);
+        //    try
+        //    {
+        //        await _context.SaveChangesAsync();
+        //    }
+        //    catch (DbUpdateException)
+        //    {
+        //        if (TablesExists(tables.tabschema))
+        //        {
+        //            return new StatusCodeResult(StatusCodes.Status409Conflict);
+        //        }
+        //        else
+        //        {
+        //            throw;
+        //        }
+        //    }
+
+        //    return CreatedAtAction("GetTables", new { id = tables.tabschema }, tables);
+        //}
+
+        //// DELETE: api/Tables/5
+        //[HttpDelete("{id}")]
+        //public async Task<IActionResult> DeleteTables([FromRoute] string id)
+        //{
+        //    if (!ModelState.IsValid)
+        //    {
+        //        return BadRequest(ModelState);
+        //    }
+
+        //    var tables = await _context.Talbes.FindAsync(id);
+        //    if (tables == null)
+        //    {
+        //        return NotFound();
+        //    }
+
+        //    _context.Talbes.Remove(tables);
+        //    await _context.SaveChangesAsync();
+
+        //    return Ok(tables);
+        //}
+
+        //private bool TablesExists(string id)
+        //{
+        //    return _context.Talbes.Any(e => e.tabschema == id);
+        //}
     }
 }

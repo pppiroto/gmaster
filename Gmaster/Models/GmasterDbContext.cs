@@ -22,5 +22,6 @@ namespace Gmaster.Models
                 .HasKey(c => new { c.tabschema, c.tabname, c.colname });
         }
         public virtual DbSet<Tables> Talbes { get; set; }
+        public virtual DbSet<Columns> Columns { get; set; }
     }
 }
