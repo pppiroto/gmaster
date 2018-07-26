@@ -12,19 +12,18 @@ namespace Gmaster.Controllers
     
     public class HomeController : Controller
     {
-        private GmasterDbContext _context;
-        public HomeController(GmasterDbContext context)
+        private readonly IConfiguration _configuration;
+        private readonly GmasterDbContext _context;
+
+        public HomeController(IConfiguration configuration, GmasterDbContext context)
         {
+            this._configuration = configuration;
             this._context = context;
         }
 
         public IActionResult Index()
         {
-            var tables = (from tbl in _context.Talbes
-                          select tbl).First();
-
-            Debug.WriteLine(tables.tabname);
-
+            ViewBag.DefaultSchema = _configuration.GetSection("DbSettings")["DefaultSchema"];
             return View();
         }
 

@@ -30,7 +30,7 @@
                                 select: true, //enables selection
                                 width: 320,
                                 height: 600,
-                                url: "/api/Tables/DB2INST1",
+                                url: "/api/Tables/@ViewBag.DefaultSchema",
                                 ready: function () {
 
                                 }
@@ -39,19 +39,27 @@
                     },
                     { view: "resizer" },
                     {
-                        // container: "testA",
-                        view: "datatable",
-                        id: "recordtable",
-                        columns: [
-                            { id: "EMPNO", header: "", css: "rank", adjust: true},
-                            { id: "FIRSTNME", header: "Film title", adjust: true},
-                            { id: "LASTNAME", header: "Released", adjust: true}
-                        ],
-                        autoheight: true,
-                        autowidth: true,
-                    },
-                    { view: "resizer" },
-                    {}
+                        rows: [
+                            {
+                                
+
+                            },
+                            { view: "resizer" },
+                            {
+                                // container: "testA",
+                                view: "datatable",
+                                id: "recordtable",
+                                columns: [
+                                    { id: "EMPNO", header: "", css: "rank", adjust: true },
+                                    { id: "FIRSTNME", header: "Film title", adjust: true },
+                                    { id: "LASTNAME", header: "Released", adjust: true }
+                                ],
+                                autoheight: true,
+                                autowidth: true,
+                            }
+    
+                        ]
+                    }
                 ]
             }
         ]
@@ -73,7 +81,8 @@
         var table = $$("recordtable");
         table.clearAll();
         table.load("/api/Tables/" + schm + "/" + tbl);
-        
+
+        window.open("@(Url.Action("Records","Table"))?schema="+schm+"&table=" + tbl);
     });
     function btn1_click() {
     }

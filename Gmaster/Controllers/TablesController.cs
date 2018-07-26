@@ -7,18 +7,47 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Gmaster.Models;
 using System.Data;
+using Microsoft.Extensions.Configuration;
 
 namespace Gmaster.Controllers
 {
+
+    public class TableController : Controller
+    {
+        private readonly IConfiguration _configuration;
+        private readonly GmasterDbContext _context;
+
+        public TableController(IConfiguration configuration, GmasterDbContext context)
+        {
+            this._configuration = configuration;
+            this._context = context;
+        }
+
+        public IActionResult Records(string schema, string table)
+        {
+            var cols = from col in _context.Columns
+                       where col.tabschema == schema
+                       &&    col.tabname   == table
+                       orderby col.colno
+                       select col;
+
+            return View(cols.ToList<Columns>());
+        }
+
+    }
+
+
     [Route("api/[controller]")]
     [ApiController]
     public class TablesController : ControllerBase
     {
+        private readonly IConfiguration _configuration;
         private readonly GmasterDbContext _context;
 
-        public TablesController(GmasterDbContext context)
+        public TablesController(IConfiguration configuration, GmasterDbContext context)
         {
-            _context = context;
+            this._configuration = configuration;
+            this._context = context;
         }
 
         [HttpGet("{schema}", Name = "Schema")]
