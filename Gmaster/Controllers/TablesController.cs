@@ -10,6 +10,8 @@ using System.Data;
 using Microsoft.Extensions.Configuration;
 using System.Diagnostics;
 using System.Text;
+using Dapper;
+using Gmaster.Util;
 
 namespace Gmaster.Controllers
 {
@@ -77,14 +79,22 @@ namespace Gmaster.Controllers
         public Dictionary<string, List<Dictionary<string, object>>> GetRecords(string schema, string tablename)
         {
 
-            var form = Request.Form.ToDictionary(f => f.Key);
-            var records = new List<Dictionary<string, object>>();
+            var args = new Dictionary<string, object>();
+            foreach(var form in Request.Form)
+            {
+                var value = form.Value.ToString();
+                if (!String.IsNullOrEmpty(value))
+                {
+                    args[form.Key] = value;
+                }
+            }
 
-            var cols = (from col in _context.Columns
+            var records = new List<Dictionary<string, object>>();
+            var cols = from col in _context.Columns
                         where col.tabschema == schema
                         && col.tabname == tablename
                         orderby col.colno
-                        select col).ToDictionary(columns => columns.colname);
+                        select col;
 
 
             var conn = _context.Database.GetDbConnection();
@@ -93,35 +103,12 @@ namespace Gmaster.Controllers
                 conn.Open();
             }
             var command = conn.CreateCommand();
-            int limit = 400;    // TODO
-            int offset = 0;     // TODO
 
-            var where = new StringBuilder();
+            var queryBuilder = new QueryBuilder();
+            var query = queryBuilder.Build(schema, tablename, cols, args, 400,0);
 
-            foreach (var column in cols)
-            {
-                var key = column.Key;
-                if (form.ContainsKey(key))
-                {
-                    var value = form[key].Value;
-
-                    if (!String.IsNullOrEmpty(value))
-                    {
-                        if (where.Length == 0)
-                        {
-                            where.Append(" where");
-                        } else
-                        {
-                            where.Append(" and");
-                        }
-                        where.Append($" {key} = '{value}'");
-                    }
-                }
-            }
-            var query = $"select * from {schema}.{tablename} {where} limit {limit} offset {offset}";
             Debug.WriteLine(query);
             command.CommandText = query;
-
 
             using (var reader = command.ExecuteReader())
             {
@@ -131,8 +118,8 @@ namespace Gmaster.Controllers
                     records.Add(rec);
                     foreach (var column in cols)
                     {
-                        object value = reader[column.Value.colno];
-                        rec[column.Value.colname] = value;
+                        object value = reader[column.colno];
+                        rec[column.colname] = value;
                     }
                 }
             }
