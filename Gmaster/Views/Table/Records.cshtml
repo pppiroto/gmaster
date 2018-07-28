@@ -28,7 +28,7 @@
                             },
 @foreach (var colmn in Model) {
     <text>
-                            { view: "text", value: '', label: "@(colmn.remarks ?? colmn.colname)" },
+                            { view: "text", value: '', label: "@(colmn.remarks ?? colmn.colname)", name: "@(colmn.colname)" },
     </text>
 }
                         ]
@@ -66,12 +66,10 @@
     });
     
     function btnSearch_click() {
-        var formData = new FormData();
-        formData.append("action", "info");
-        formData.append("id", "123");
+        var forms = $$("columns_form").getValues();
         var url = "/api/Tables/@(ViewBag.Schema)/@(ViewBag.Table)";
 
-        webix.ajax().post(url, formData, function(text, data, XmlHttpRequest){
+        webix.ajax().post(url, forms, function(text, data, XmlHttpRequest){
             var table = $$("record_table");
             table.clearAll();
             table.parse(data.json().records);

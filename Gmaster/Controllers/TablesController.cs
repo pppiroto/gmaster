@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using Gmaster.Models;
 using System.Data;
 using Microsoft.Extensions.Configuration;
+using System.Diagnostics;
+using System.Text;
 
 namespace Gmaster.Controllers
 {
@@ -74,13 +76,16 @@ namespace Gmaster.Controllers
         [HttpPost("{schema}/{tablename}", Name = "TableName")]
         public Dictionary<string, List<Dictionary<string, object>>> GetRecords(string schema, string tablename)
         {
+
+            var form = Request.Form.ToDictionary(f => f.Key);
             var records = new List<Dictionary<string, object>>();
 
-            var cols = from col in _context.Columns
-                            where col.tabschema == schema
-                            && col.tabname == tablename
-                            orderby col.colno
-                            select col;
+            var cols = (from col in _context.Columns
+                        where col.tabschema == schema
+                        && col.tabname == tablename
+                        orderby col.colno
+                        select col).ToDictionary(columns => columns.colname);
+
 
             var conn = _context.Database.GetDbConnection();
             if (conn.State != ConnectionState.Open)
@@ -90,17 +95,44 @@ namespace Gmaster.Controllers
             var command = conn.CreateCommand();
             int limit = 400;    // TODO
             int offset = 0;     // TODO
-            command.CommandText = $"select * from {schema}.{tablename} limit {limit} offset {offset}";
+
+            var where = new StringBuilder();
+
+            foreach (var column in cols)
+            {
+                var key = column.Key;
+                if (form.ContainsKey(key))
+                {
+                    var value = form[key].Value;
+
+                    if (!String.IsNullOrEmpty(value))
+                    {
+                        if (where.Length == 0)
+                        {
+                            where.Append(" where");
+                        } else
+                        {
+                            where.Append(" and");
+                        }
+                        where.Append($" {key} = '{value}'");
+                    }
+                }
+            }
+            var query = $"select * from {schema}.{tablename} {where} limit {limit} offset {offset}";
+            Debug.WriteLine(query);
+            command.CommandText = query;
+
+
             using (var reader = command.ExecuteReader())
             {
                 while (reader.Read())
                 {
                     var rec = new Dictionary<string, object>();
                     records.Add(rec);
-                    foreach (var col in cols)
+                    foreach (var column in cols)
                     {
-                        object value = reader[col.colno];
-                        rec[col.colname] = value;
+                        object value = reader[column.Value.colno];
+                        rec[column.Value.colname] = value;
                     }
                 }
             }
