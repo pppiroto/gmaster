@@ -4,7 +4,6 @@
 }
 <script type="text/javascript" charset="utf-8">
     webix.ui({
-        id: "root_layout",
         rows: [
             {
                 view: "toolbar", id: "mybar", elements: [
@@ -15,6 +14,9 @@
             },
             {
                 cols: [
+                    {
+
+                    },
                     {
                         view: "form",
                         id: "columns_form",
@@ -31,6 +33,7 @@
                             { view: "text", value: '', label: "@(colmn.remarks ?? colmn.colname)" },
     </text>
 }
+
                         ]
                     },
                     { view: "resizer" },
@@ -44,6 +47,7 @@
                                 group: 5,
                             },
                             {
+                                // container: "testA",
                                 view: "datatable",
                                 id: "record_table",
                                 columns: [
@@ -53,9 +57,9 @@
     </text>
 }
                                 ],
-                                position: "flex",
-                                select: true,
                                 pager: "records_pager",
+                                autoheight: true,
+                                autowidth: true,
                             }
 
                         ]
