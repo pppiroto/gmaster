@@ -70,9 +70,8 @@
                 {
                     view: "toolbar", id: "mybar", elements: [
                         { view: "button", value: "Search", width: 70, click: "btnSearch_click" },
-                        { view: "button", value: "Clear", width: 70, click: "btnClear_click" },
-                        { view: "button", value: "Btn3", width: 70, click: "btn3_click" },
-                        { view: "button", value: "Clear Form", width: 85, click: '$$("tableform").clear()' }]
+                        { view: "button", value: "Clear", width: 70, click: "$$('columns_form').clear()" },
+                    ]
                 },
                 { 
                     cols: [
@@ -96,11 +95,5 @@
             table.clearAll();
             table.parse(data.json().records);
         });
-    }
-    function btnClear_click() {
-        $$("columns_form").clear();
-
-    }
-    function btn3_click() {
     }
 </script>
