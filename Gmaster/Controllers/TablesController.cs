@@ -29,6 +29,11 @@ namespace Gmaster.Controllers
 
         public IActionResult Records(string schema, string table)
         {
+            var tab = (from tbl in _context.Talbes
+                       where tbl.tabschema == schema
+                       && tbl.tabname == table
+                       select tbl).First();
+
             var cols = from col in _context.Columns
                        where col.tabschema == schema
                        &&    col.tabname   == table
@@ -37,6 +42,7 @@ namespace Gmaster.Controllers
 
             ViewBag.Schema = schema.TrimEnd();
             ViewBag.Table = table.TrimEnd();
+            ViewBag.Remarks = tab?.remarks;
 
             return View(cols.ToList<Columns>());
         }

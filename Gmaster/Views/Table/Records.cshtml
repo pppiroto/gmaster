@@ -3,68 +3,90 @@
     ViewData["Title"] = "Records";
 }
 <script type="text/javascript" charset="utf-8">
-    webix.ui({
-        id: "root_layout",
-        rows: [
-            {
-                view: "toolbar", id: "mybar", elements: [
-                    { view: "button", value: "Btn1", width: 70, click: "btn1_click" },
-                    { view: "button", value: "Btn2", width: 70, click: "btn2_click" },
-                    { view: "button", value: "Btn3", width: 70, click: "btn3_click" },
-                    { view: "button", value: "Clear Form", width: 85, click: '$$("tableform").clear()' }]
-            },
-            {
-                cols: [
+    webix.ready(function () {
+        if (webix.CustomScroll && !webix.env.touch) webix.CustomScroll.init();
+
+        var form_layout = {
+            margin: 10, padding: 0, type: "wide",
+            view: "flexlayout",
+            cols: [{
+                rows: [
+                    {
+                        height: 35,
+                        view: "toolbar",
+                        elements: [
+                            { view: "label", label: "@(ViewBag.Remarks ?? ViewBag.Table)" }
+                        ]
+                    },
                     {
                         view: "form",
                         id: "columns_form",
-                        width: 400,
+                        width: 300,
                         elements: [
-                            {
-                                cols: [
-                                    { view: "button", value: "Search", width: 70, click: "btnSearch_click" },
-                                    { view: "button", value: "Clear", width: 70, click: "btnClear_click" },
-                                ]
-                            },
-@foreach (var colmn in Model) {
-    <text>
+                            @foreach (var colmn in Model) {
+                                <text>
                             { view: "text", value: '', label: "@(colmn.remarks ?? colmn.colname)", name: "@(colmn.colname)" },
-    </text>
-}
-                        ]
-                    },
-                    { view: "resizer" },
-                    {
-                        rows: [
-                            {
-                                view: "pager",
-                                id: "records_pager",
-                                template:" {common.first()} {common.prev()} {common.pages()} {common.next()} {common.last()}",
-                                size: 50,
-                                group: 5,
-                            },
-                            {
-                                view: "datatable",
-                                id: "record_table",
-                                columns: [
-@foreach (var colmn in Model) {
-    <text>
-                                    { id: "@(colmn.colname)", header: "@(colmn.remarks ?? colmn.colname)", css: "rank", adjust: true },
-    </text>
-}
-                                ],
-                                position: "flex",
-                                select: true,
-                                pager: "records_pager",
+                                </text>
                             }
-
                         ]
                     }
                 ]
-            }
-        ]
+            }]
+        };
+
+        var content_layout = {
+            margin: 10, padding: 0, type: "wide",
+            view: "flexlayout",
+            cols: [{
+                rows: [
+                    {
+                        view: "pager",
+                        id: "records_pager",
+                        template:" {common.first()} {common.prev()} {common.pages()} {common.next()} {common.last()}",
+                        size: 50,
+                        group: 5,
+                    },
+                    {
+                        view: "datatable",
+                        id: "record_table",
+                        columns: [
+                            @foreach (var colmn in Model) {
+                                <text>
+                                { id: "@(colmn.colname)", header: "@(colmn.remarks ?? colmn.colname)", css: "rank", adjust: true },
+                                </text>
+                            }
+                        ],
+                        position: "flex",
+                        select: true,
+                        pager: "records_pager",
+                    }
+                ]
+            }]
+        };
+
+        webix.ui({
+            id: "root_layout",
+            rows: [
+                {
+                    view: "toolbar", id: "mybar", elements: [
+                        { view: "button", value: "Search", width: 70, click: "btnSearch_click" },
+                        { view: "button", value: "Clear", width: 70, click: "btnClear_click" },
+                        { view: "button", value: "Btn3", width: 70, click: "btn3_click" },
+                        { view: "button", value: "Clear Form", width: 85, click: '$$("tableform").clear()' }]
+                },
+                { 
+                    cols: [
+                        { view: "scrollview", width:300, body: form_layout },
+                        { view: "resizer" },
+                        { view: "scrollview", body: content_layout },
+                    ]
+                },
+                { template: "status: hoge", height: 30 }
+            ]
+        });
+        webix.ui.fullScreen();
     });
-    
+
     function btnSearch_click() {
         var forms = $$("columns_form").getValues();
         var url = "/api/Tables/@(ViewBag.Schema)/@(ViewBag.Table)";
@@ -76,12 +98,8 @@
         });
     }
     function btnClear_click() {
+        $$("columns_form").clear();
 
-
-    }
-    function btn1_click() {
-    }
-    function btn2_click() {
     }
     function btn3_click() {
     }
