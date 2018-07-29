@@ -25,7 +25,7 @@
                         elements: [
                             @foreach (var colmn in Model) {
                                 <text>
-                            { view: "text", value: '', label: "@(colmn.remarks ?? colmn.colname)", name: "@(colmn.colname)" },
+                            { view: "text", value: '', label: "@(colmn.remarks ?? colmn.colname)", name: "@(colmn.colname)"},
                                 </text>
                             }
                         ]
@@ -49,10 +49,11 @@
                     {
                         view: "datatable",
                         id: "record_table",
+                        @Html.Raw((ViewBag.KeyCount > 0)? $"leftSplit:{ViewBag.KeyCount},":"")
                         columns: [
                             @foreach (var colmn in Model) {
                                 <text>
-                                { id: "@(colmn.colname)", header: "@(colmn.remarks ?? colmn.colname)", css: "rank", adjust: true },
+                                { id: "@(colmn.colname)", header: "@(colmn.remarks ?? colmn.colname)", adjust: true @Html.Raw((colmn.keyseq > 0) ? ", css:\"keycol\"" : "")},
                                 </text>
                             }
                         ],

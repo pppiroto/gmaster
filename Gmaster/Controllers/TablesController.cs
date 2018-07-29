@@ -12,6 +12,8 @@ using System.Diagnostics;
 using System.Text;
 using Dapper;
 using Gmaster.Util;
+using IBM.Data.DB2.Core;
+using IBM.Data.DB2Types;
 
 namespace Gmaster.Controllers
 {
@@ -34,17 +36,20 @@ namespace Gmaster.Controllers
                        && tbl.tabname == table
                        select tbl).First();
 
-            var cols = from col in _context.Columns
+            var cols = (from col in _context.Columns
                        where col.tabschema == schema
                        &&    col.tabname   == table
                        orderby col.colno
-                       select col;
+                       select col).ToList<Columns>();
 
+            var keyCnt = cols.Max(colmn => colmn.keyseq);
+            
             ViewBag.Schema = schema.TrimEnd();
             ViewBag.Table = table.TrimEnd();
             ViewBag.Remarks = tab?.remarks;
-
-            return View(cols.ToList<Columns>());
+            ViewBag.KeyCount = keyCnt;
+            
+            return View(cols);
         }
 
     }
@@ -116,16 +121,30 @@ namespace Gmaster.Controllers
             Debug.WriteLine(query);
             command.CommandText = query;
 
+            // https://www.ibm.com/support/knowledgecenter/fr/SSEPGG_9.7.0/com.ibm.swg.im.dbclient.adonet.ref.doc/doc/DB2DataReaderClassGetDB2XmlMethod.html
+            // https://www.ibm.com/developerworks/community/forums/html/topic?id=9a107d00-d814-440c-b438-faa4d020ae1a&ps=100
             using (var reader = command.ExecuteReader())
             {
+                var converter = new ValueConverter();
                 while (reader.Read())
                 {
                     var rec = new Dictionary<string, object>();
                     records.Add(rec);
                     foreach (var column in cols)
                     {
-                        object value = reader[column.colno];
-                        rec[column.colname] = value;
+                        
+                        object value = null;
+                        if (column.typename == "XML")
+                        {
+                            // IBM Data Server Provider support for .NET Core Xml is not  yet supported.
+                            // always return null !!
+                            DB2Xml db2Xml = (reader as DB2DataReader).GetDB2Xml(column.colno);
+                            value = db2Xml?.ToString();
+                        } else
+                        {
+                            value = reader[column.colno]; 
+                        }
+                        rec[column.colname] = converter.convertToString(value, column);
                     }
                 }
             }

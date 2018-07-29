@@ -1,8 +1,4 @@
-﻿body, html {
-    margin: 0px;
-    height: 100vh;
-}
-div#root_div {
-    margin:2px;
-    height:100vh;
+﻿.keycol {
+    color: royalblue;
+    text-decoration: underline;
 }
