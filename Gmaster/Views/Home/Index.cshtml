@@ -15,19 +15,30 @@
                         height: 35,
                         view: "toolbar",
                         elements: [
-                            { view: "text", id: "list_input", label: "Table Filter", css: "fltr", labelWidth: 170 }
+                            { view: "text", id: "list_input", label: "TABLES", css: "fltr", labelWidth: 170 }
                         ]
                     },
                     {
                         view: "list",
                         id: "tablelist",
-                        template: "#tablename#",
+                        template: "<span class='webix_icon fa-sticky-note-o'></span>#tablename#",
                         select: true, //enables selection
-                        width: 600,
-                        height: 600,
-                        url: "/api/Tables/@ViewBag.DefaultSchema",
+                        width: 400,
+                        url: "/api/Tables/@(ViewBag.DefaultSchema)",
                         ready: function () {
 
+                        },
+                        onClick: {
+                            "fa-sticky-note-o": function (e, id, trg) {
+                                // webix.message(" ID =" + id);
+
+                                var schm = $$("tablelist").getItem(id).tabschema;
+                                var tbl = $$("tablelist").getItem(id).tabname;
+                                var url = "@(Url.Action("Records","Table"))?schema="+schm+"&table=" + tbl;
+                                window.open(url);
+
+                                return false;
+                            }
                         }
                     }
                 ]
@@ -63,14 +74,6 @@
             || obj.tablename.toLowerCase().indexOf(value) >= 0;
             })
         });
-
-        $$("tablelist").attachEvent("onAfterSelect", function (id) {
-            var schm = $$("tablelist").getItem(id).tabschema;
-            var tbl = $$("tablelist").getItem(id).tabname;
-            var url = "@(Url.Action("Records","Table"))?schema="+schm+"&table=" + tbl;
-            window.open(url);
-        });
-
     });
     function btn1_click() {
     }

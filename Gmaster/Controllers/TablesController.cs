@@ -47,7 +47,7 @@ namespace Gmaster.Controllers
             ViewBag.Schema = schema.TrimEnd();
             ViewBag.Table = table.TrimEnd();
             ViewBag.Remarks = tab?.remarks;
-            ViewBag.KeyCount = keyCnt;
+            ViewBag.KeyCount = ((keyCnt >= 0)?keyCnt:0);
             
             return View(cols);
         }

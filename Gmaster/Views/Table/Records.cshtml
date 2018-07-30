@@ -25,7 +25,7 @@
                         elements: [
                             @foreach (var colmn in Model) {
                                 <text>
-                            { view: "text", value: '', label: "@(colmn.remarks ?? colmn.colname)", name: "@(colmn.colname)"},
+                                { view: "text", value: '', label: "@(colmn.remarks ?? colmn.colname)", name: "@(colmn.colname)"},
                                 </text>
                             }
                         ]
@@ -34,6 +34,7 @@
             }]
         };
 
+        var note = "<span class='webix_icon fa-sticky-note-o'></span>";
         var content_layout = {
             margin: 10, padding: 0, type: "wide",
             view: "flexlayout",
@@ -49,8 +50,9 @@
                     {
                         view: "datatable",
                         id: "record_table",
-                        @Html.Raw((ViewBag.KeyCount > 0)? $"leftSplit:{ViewBag.KeyCount},":"")
+                        leftSplit: "@(ViewBag.KeyCount + 1)",
                         columns: [
+                            { id: "detailBtn", header: "", width: 40, template: note },
                             @foreach (var colmn in Model) {
                                 <text>
                                 { id: "@(colmn.colname)", header: "@(colmn.remarks ?? colmn.colname)", adjust: true @Html.Raw((colmn.keyseq > 0) ? ", css:\"keycol\"" : "")},
@@ -60,6 +62,13 @@
                         position: "flex",
                         select: true,
                         pager: "records_pager",
+                        onClick: {
+                            "fa-sticky-note-o": function (e, id, trg) {
+                                // webix.message(" ID =" + id);
+
+                                return false;
+                            }
+                        }
                     }
                 ]
             }]
@@ -74,7 +83,7 @@
                         { view: "button", value: "Clear", width: 70, click: "$$('columns_form').clear()" },
                     ]
                 },
-                { 
+                {
                     cols: [
                         { view: "scrollview", width:300, body: form_layout },
                         { view: "resizer" },
