@@ -34,6 +34,43 @@
             }]
         };
 
+        webix.ui({
+            view: "window",
+            id: "edit_window",
+            head: {
+                view: "toolbar", margin: -4, cols: [
+                    { view: "label", label: "@(ViewBag.Remarks ?? ViewBag.Table)" },
+                    {
+                        view: "icon", icon: "times-circle",
+                        click: "$$('edit_window').hide();"
+                    }
+                ]
+            },
+            modal: true,
+            move: true,
+            resize: true,
+            position: "center",
+            height: 400,
+            width: 600,
+            position: "center",
+            body: {
+                view: "datatable",
+                    editable: true,
+                    columns: [
+                        { id: "col_name", header: "Column", adjust: true, css:"keycol" },
+                        { id: "col_value", header: "Value", adjust: true, editor: "text" }
+                    ],
+                    data: [
+                        @foreach (var colmn in Model) {
+                            <text>
+                            { col_name: "@(colmn.remarks ?? colmn.colname)", name: "@(colmn.colname)", col_value:""},
+                            </text>
+                        }
+                    ]
+                
+            }
+        });
+
         var note = "<span class='webix_icon fa-sticky-note-o'></span>";
         var content_layout = {
             margin: 10, padding: 0, type: "wide",
@@ -66,7 +103,7 @@
                             "fa-sticky-note-o": function (e, id, trg) {
                                 // webix.message(" ID =" + id);
 
-                                return false;
+                                $$("edit_window").show(this.$view);
                             }
                         }
                     }
