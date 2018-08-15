@@ -10,38 +10,39 @@
             view: "flexlayout",
             cols: [
                 {
-                rows: [
-                    {
-                        height: 35,
-                        view: "toolbar",
-                        elements: [
-                            { view: "text", id: "list_input", label: "TABLES", css: "fltr", labelWidth: 170 }
-                        ]
-                    },
-                    {
-                        view: "list",
-                        id: "tablelist",
-                        template: "<span class='webix_icon fa-sticky-note-o'></span>#tablename#",
-                        select: true, //enables selection
-                        width: 400,
-                        url: "/api/Tables/@(ViewBag.DefaultSchema)",
-                        ready: function () {
-
+                    rows: [
+                        {
+                            height: 35,
+                            view: "toolbar",
+                            elements: [
+                                { view: "text", id: "list_input", label: "TABLES", css: "fltr", labelWidth: 170 }
+                            ]
                         },
-                        onClick: {
-                            "fa-sticky-note-o": function (e, id, trg) {
-                                // webix.message(" ID =" + id);
+                        {
+                            view: "list",
+                            id: "tablelist",
+                            template: "<span class='webix_icon fa-sticky-note-o'></span>#tablename#",
+                            select: true, //enables selection
+                            width: 400,
+                            url: "/api/Tables/@(ViewBag.DefaultSchema)",
+                            ready: function () {
+                                // webix.message("loaded");
+                                showProgress(false);
+                            },
+                            onClick: {
+                                "fa-sticky-note-o": function (e, id, trg) {
+                                    // webix.message(" ID =" + id);
 
-                                var schm = $$("tablelist").getItem(id).tabschema;
-                                var tbl = $$("tablelist").getItem(id).tabname;
-                                var url = "@(Url.Action("Records","Table"))?schema="+schm+"&table=" + tbl;
-                                window.open(url);
+                                    var schm = $$("tablelist").getItem(id).tabschema;
+                                    var tbl = $$("tablelist").getItem(id).tabname;
+                                    var url = "@(Url.Action("Records","Table"))?schema="+schm+"&table=" + tbl;
+                                    window.open(url);
 
-                                return false;
+                                    return false;
+                                }
                             }
                         }
-                    }
-                ]
+                    ]
                 }
             ]
         };
@@ -66,6 +67,8 @@
             ]
         });
         webix.ui.fullScreen();
+        webix.extend($$("root_layout"), webix.ProgressBar);
+
 
         $$("list_input").attachEvent("onTimedKeyPress", function () {
             var value = this.getValue().toLowerCase();
@@ -74,7 +77,24 @@
             || obj.tablename.toLowerCase().indexOf(value) >= 0;
             })
         });
+
+        showProgress(true);
     });
+
+    function showProgress(isInProgress) {
+        if (isInProgress) {
+            $$("root_layout").disable();
+            $$("root_layout").showProgress({
+                type: "icon",
+                //delay: 2000,
+                hide: false
+            });
+        } else {
+            $$("root_layout").hideProgress();
+            $$("root_layout").enable();
+        }
+    }
+
     function btn1_click() {
     }
     function btn2_click() {

@@ -131,16 +131,35 @@
             ]
         });
         webix.ui.fullScreen();
+        webix.extend($$("root_layout"), webix.ProgressBar);
+
+
     });
 
     function btnSearch_click() {
         var forms = $$("columns_form").getValues();
         var url = "/api/Tables/@(ViewBag.Schema)/@(ViewBag.Table)";
 
+        showProgress(true);
         webix.ajax().post(url, forms, function(text, data, XmlHttpRequest){
             var table = $$("record_table");
             table.clearAll();
             table.parse(data.json().records);
+            showProgress(false);
         });
+    }
+
+    function showProgress(isInProgress) {
+        if (isInProgress) {
+            $$("root_layout").disable();
+            $$("root_layout").showProgress({
+                type: "icon",
+                //delay: 2000,
+                hide: false
+            });
+        } else {
+            $$("root_layout").hideProgress();
+            $$("root_layout").enable();
+        }
     }
 </script>
