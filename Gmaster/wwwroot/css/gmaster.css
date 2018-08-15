@@ -2,3 +2,6 @@
     color: royalblue;
     /* text-decoration: underline; */
 }
+.num {
+    text-align: right;
+}

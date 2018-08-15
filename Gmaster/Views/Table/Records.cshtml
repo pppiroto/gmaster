@@ -3,6 +3,7 @@
     ViewData["Title"] = "Records";
 }
 <script type="text/javascript" charset="utf-8">
+
     webix.ready(function () {
         if (webix.CustomScroll && !webix.env.touch) webix.CustomScroll.init();
 
@@ -52,22 +53,19 @@
             position: "center",
             height: 400,
             width: 600,
-            position: "center",
             body: {
-                view: "datatable",
-                    editable: true,
-                    columns: [
-                        { id: "col_name", header: "Column", adjust: true, css:"keycol" },
-                        { id: "col_value", header: "Value", adjust: true, editor: "text" }
-                    ],
-                    data: [
+                view: "scrollview", body: {
+                    view: "form",
+                    id: "columns_form",
+                    width: 300,
+                    elements: [
                         @foreach (var colmn in Model) {
                             <text>
-                            { col_name: "@(colmn.remarks ?? colmn.colname)", name: "@(colmn.colname)", col_value:""},
+                            { view: "text", value: '', label: "@(colmn.remarks ?? colmn.colname)", name: "@(colmn.colname)" },
                             </text>
                         }
                     ]
-                
+                }
             }
         });
 
@@ -92,18 +90,18 @@
                             { id: "detailBtn", header: "", width: 40, template: note },
                             @foreach (var colmn in Model) {
                                 <text>
-                                { id: "@(colmn.colname)", header: "@(colmn.remarks ?? colmn.colname)", adjust: true @Html.Raw((colmn.keyseq > 0) ? ", css:\"keycol\"" : "")},
+                            { id: "@(colmn.colname)", header: "@(colmn.remarks ?? colmn.colname)", adjust: true @Html.Raw((colmn.keyseq > 0) ? ", css:\"keycol\"" : "")},
                                 </text>
                             }
                         ],
                         position: "flex",
                         select: true,
+                        resizeColumn: true,
                         pager: "records_pager",
                         onClick: {
                             "fa-sticky-note-o": function (e, id, trg) {
                                 // webix.message(" ID =" + id);
-
-                                $$("edit_window").show(this.$view);
+                                loadDetail($$("record_table").getItem(id));
                             }
                         }
                     }
@@ -136,6 +134,10 @@
 
     });
 
+    function loadDetail(item) {
+        $$("edit_window").show(this.$view);
+    }
+    
     function btnSearch_click() {
         var forms = $$("columns_form").getValues();
         var url = "/api/Tables/@(ViewBag.Schema)/@(ViewBag.Table)";
