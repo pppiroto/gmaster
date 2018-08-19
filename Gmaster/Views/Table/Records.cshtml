@@ -7,9 +7,10 @@
     webix.ready(function () {
         if (webix.CustomScroll && !webix.env.touch) webix.CustomScroll.init();
 
-        var form_layout = {
+        var form_search_layout = {
             margin: 10, padding: 0, type: "wide",
             view: "flexlayout",
+            id: "form_search_layout",
             cols: [{
                 rows: [
                     {
@@ -21,7 +22,7 @@
                     },
                     {
                         view: "form",
-                        id: "columns_form",
+                        id: "search_condition_form",
                         width: 300,
                         elements: [
                             @foreach (var colmn in Model) {
@@ -37,13 +38,13 @@
 
         webix.ui({
             view: "window",
-            id: "edit_window",
+            id: "edit_column_window",
             head: {
                 view: "toolbar", margin: -4, cols: [
                     { view: "label", label: "@(ViewBag.Remarks ?? ViewBag.Table)" },
                     {
                         view: "icon", icon: "times-circle",
-                        click: "$$('edit_window').hide();"
+                        click: "$$('edit_column_window').hide();"
                     }
                 ]
             },
@@ -54,18 +55,32 @@
             height: 400,
             width: 600,
             body: {
-                view: "scrollview", body: {
-                    view: "form",
-                    id: "columns_form",
-                    width: 300,
-                    elements: [
-                        @foreach (var colmn in Model) {
-                            <text>
-                            { view: "text", value: '', label: "@(colmn.remarks ?? colmn.colname)", name: "@(colmn.colname)" },
-                            </text>
-                        }
-                    ]
-                }
+                rows: [
+                    {
+                        view: "scrollview", body: {
+                            view: "form",
+                            id: "edit_column_form",
+                            width: 300,
+                            elements: [
+                                @foreach (var colmn in Model) {
+                                    <text>
+                                { view: "text", value: '', label: "@(colmn.remarks ?? colmn.colname)", name: "@(colmn.colname)", readonly: @(colmn.keyseq >= 0 ? "true": "false") },
+                                    </text>
+                                }
+                            ],
+                            autoheight: true
+                        },
+                    },
+                    { view: "resizer" }, 
+                    {
+                        view: "toolbar",
+                        id: "button_bar",
+                        cols: [
+                            { view: "button", value: 'Update', click: "" },
+                            { view: "button", value: 'Delete', click: "" },
+                        ]
+                    }
+                ]
             }
         });
 
@@ -115,12 +130,12 @@
                 {
                     view: "toolbar", id: "mybar", elements: [
                         { view: "button", value: "Search", width: 70, click: "btnSearch_click" },
-                        { view: "button", value: "Clear", width: 70, click: "$$('columns_form').clear()" },
+                        { view: "button", value: "Clear", width: 70, click: "$$('search_condition_form').clear()" },
                     ]
                 },
                 {
                     cols: [
-                        { view: "scrollview", width:300, body: form_layout },
+                        { view: "scrollview", width:300, body: form_search_layout },
                         { view: "resizer" },
                         { view: "scrollview", body: content_layout },
                     ]
@@ -135,11 +150,16 @@
     });
 
     function loadDetail(item) {
-        $$("edit_window").show(this.$view);
+
+        var form = $$("edit_column_form");
+        form.clear();
+        form.parse(item, "json");
+
+        $$("edit_column_window").show(this.$view);
     }
     
     function btnSearch_click() {
-        var forms = $$("columns_form").getValues();
+        var forms = $$("search_condition_form").getValues();
         var url = "/api/Tables/@(ViewBag.Schema)/@(ViewBag.Table)";
 
         showProgress(true);
