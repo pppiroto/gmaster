@@ -1,6 +1,21 @@
 ﻿@model IEnumerable<Gmaster.Models.Columns>
 @{
-    ViewData["Title"] = "Records";
+    ViewData["Title"] = $"Records-{ViewBag.Remarks ?? ViewBag.Table}";
+}
+@functions {
+    string GetWidget(Gmaster.Models.Columns colmn)
+    {
+        switch(colmn.typename.ToLower())
+        {
+            case "date":
+                return "view: 'datepicker', format:'%Y-%m-%d'";
+            case "timestamp":
+                return "view: 'datepicker', format:'%Y-%m-%d', timepicker: true";
+            default:
+                return "view: 'text'";
+        }
+    }
+
 }
 <script type="text/javascript" charset="utf-8">
 
@@ -27,7 +42,7 @@
                         elements: [
                             @foreach (var colmn in Model) {
                                 <text>
-                                { view: "text", value: '', label: "@(colmn.remarks ?? colmn.colname)", name: "@(colmn.colname)"},
+                                { @Html.Raw(GetWidget(colmn)), value: '', label: "@(colmn.remarks ?? colmn.colname)", name: "@(colmn.colname)"},
                                 </text>
                             }
                         ]
@@ -60,23 +75,23 @@
                         view: "scrollview", body: {
                             view: "form",
                             id: "edit_column_form",
-                            width: 300,
+                            width: 500,
                             elements: [
                                 @foreach (var colmn in Model) {
                                     <text>
-                                { view: "text", value: '', label: "@(colmn.remarks ?? colmn.colname)", name: "@(colmn.colname)", readonly: @(colmn.keyseq >= 0 ? "true": "false") },
+                                    { @Html.Raw(GetWidget(colmn)), value: '', label: "@(colmn.remarks ?? colmn.colname)", name: "@(colmn.colname)", readonly: @(colmn.keyseq >= 0 ? "true": "false") },
                                     </text>
                                 }
                             ],
                             autoheight: true
                         },
                     },
-                    { view: "resizer" }, 
+                    { view: "resizer" },
                     {
                         view: "toolbar",
                         id: "button_bar",
                         cols: [
-                            { view: "button", value: 'Update', click: "" },
+                            { view: "button", value: 'Update', click: "btnUpdate_click" },
                             { view: "button", value: 'Delete', click: "" },
                         ]
                     }
@@ -157,10 +172,25 @@
 
         $$("edit_column_window").show(this.$view);
     }
-    
+
+    function btnUpdate_click() {
+        var forms = $$("edit_column_form").getValues();
+        var url = "/api/Tables/@(ViewBag.Schema)/@(ViewBag.Table)";
+
+        showProgress(true);
+        webix.ajax().put(url, forms, function(text, data, XmlHttpRequest){
+
+            // TODO
+            console.log(data);
+            webix.message(data);
+
+            showProgress(false);
+        });
+    }
+
     function btnSearch_click() {
         var forms = $$("search_condition_form").getValues();
-        var url = "/api/Tables/@(ViewBag.Schema)/@(ViewBag.Table)";
+        var url = "/api/Tables/@(ViewBag.Schema)/@(ViewBag.Table)/Search";
 
         showProgress(true);
         webix.ajax().post(url, forms, function(text, data, XmlHttpRequest){

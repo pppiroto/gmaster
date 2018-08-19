@@ -86,7 +86,24 @@ namespace Gmaster.Controllers
             return tables.ToList();
         }
 
-        [HttpPost("{schema}/{tablename}", Name = "TableName")]
+        [HttpPut("{schema}/{tablename}", Name = "UpdateRecord")]
+        public Dictionary<string, object> UpdateRecord(string schema, string tablename)
+        {
+            var args = new Dictionary<string, object>();
+            foreach (var form in Request.Form)
+            {
+                var value = form.Value.ToString();
+                if (!String.IsNullOrEmpty(value))
+                {
+                    args[form.Key] = value;
+                }
+            }
+
+            // TODO
+            return args; 
+        }
+
+        [HttpPost("{schema}/{tablename}/Search", Name = "SearchRecords")]
         public Dictionary<string, List<Dictionary<string, object>>> GetRecords(string schema, string tablename)
         {
 
